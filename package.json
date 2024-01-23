@@ -1,0 +1,53 @@
+{
+    "name": "ec2-bastion-cdk",
+    "version": "0.0.0",
+    "description": "",
+    "license": "MIT",
+    "author": {
+        "name": "Isotoma Limited",
+        "email": "hello@isotoma.com",
+        "url": "https://isotoma.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/isotoma/ec2-bastion-cdk"
+    },
+    "keywords": [
+        "cdk",
+        "ec2",
+        "aws",
+        "bastion"
+    ],
+    "scripts": {
+        "test": "jest",
+        "tsc": "tsc",
+        "clean": "rm -rf build/",
+        "compile": "npm run clean && npm run -- tsc --outDir build/ && cp package.json README.md ./build/",
+        "version": "auto-changelog --hide-credit -p && git add CHANGELOG.md",
+        "_lint": "eslint 'index.ts' 'test/**/*.ts' jest.config.js",
+        "lint": "npm run -- _lint --fix",
+        "lint-check": "npm run -- _lint --max-warnings 0",
+        "docs": "typedoc index.ts --includeVersion"
+    },
+    "peerDependencies": {
+        "aws-cdk-lib": "^2.0.0",
+        "constructs": "^10.0.0"
+    },
+    "devDependencies": {
+        "@types/jest": "^29.5.11",
+        "@types/node": "^14.14.31",
+        "@typescript-eslint/eslint-plugin": "^5.0.0",
+        "@typescript-eslint/parser": "^5.0.0",
+        "auto-changelog": "^2.3.0",
+        "aws-cdk-lib": "^2.15.0",
+        "constructs": "^10.0.0",
+        "eslint": "^8.0.1",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "jest": "^29.7.0",
+        "prettier": "^2.4.1",
+        "ts-jest": "^29.1.1",
+        "typedoc": "^0.25.4",
+        "typescript": "^5.3.3"
+    }
+}
