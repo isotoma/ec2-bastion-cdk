@@ -181,6 +181,7 @@ export interface Ec2HaBastionProps {
 
 export class Ec2HaBastion extends Construct implements ec2.IConnectable {
     public readonly connections: ec2.Connections;
+    public readonly networkLoadBalancer: elbv2.INetworkLoadBalancer;
 
     constructor(scope: Construct, id: string, props: Ec2HaBastionProps) {
         super(scope, id);
@@ -216,12 +217,12 @@ export class Ec2HaBastion extends Construct implements ec2.IConnectable {
         this.connections = asg.connections;
 
         // Create an NLB in front of the ASG
-        const lb = new elbv2.NetworkLoadBalancer(this, 'LB', {
+        this.networkLoadBalancer = new elbv2.NetworkLoadBalancer(this, 'LB', {
             vpc: props.vpc,
             internetFacing: true,
         });
 
-        const listener = lb.addListener('Listener', { port: 22 });
+        const listener = this.networkLoadBalancer.addListener('Listener', { port: 22 });
 
         listener.addTargets('Target', {
             port: 22,
