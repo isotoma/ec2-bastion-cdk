@@ -40,6 +40,9 @@ publickeys_base64_encoded="${publickeysBase64Encoded}"
 main() {
     if [[ -n $allow_ec2_metadata_service_access ]]; then
         echo "Disabling access to EC2 metadata service..."
+        sudo yum install iptables-services -y
+        sudo systemctl enable iptables
+        sudo systemctl start iptables
         sudo iptables -A OUTPUT -m owner ! --uid-owner root -d 169.254.169.254 -j DROP
     fi
 
