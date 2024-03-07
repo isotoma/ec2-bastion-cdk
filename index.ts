@@ -86,7 +86,7 @@ main() {
 
     sudo chown -R "$proxy_user_name:$proxy_user_name" "$tmpdir"
     
-    (sudo su - $proxy_user_name && {
+    (sudo su - --shell=/bin/bash $proxy_user_name && {
          keysadded=0
          for filename in "$tmpdir"/*.pub; do
              if [[ -f $filename ]]; then
