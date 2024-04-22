@@ -223,6 +223,10 @@ export class Ec2HaBastion extends Construct implements ec2.IConnectable {
         this.networkLoadBalancer = new elbv2.NetworkLoadBalancer(this, 'LB', {
             vpc: props.vpc,
             internetFacing: true,
+            // Public subnets
+            vpcSubnets: {
+                subnetType: ec2.SubnetType.PUBLIC,
+            },
         });
 
         const listener = this.networkLoadBalancer.addListener('Listener', { port: 22 });
@@ -235,6 +239,13 @@ export class Ec2HaBastion extends Construct implements ec2.IConnectable {
         if (props.allowedCidrs && props.allowedCidrs.length > 0) {
             for (const cidr of props.allowedCidrs) {
                 asg.connections.allowFrom(ec2.Peer.ipv4(cidr), ec2.Port.tcp(22));
+            }
+            // Also allow the NLB to connect to the ASG by allowing
+            // access from the public subnets, this allows the NLB to
+            // health check the instances.
+            for (const subnet of props.vpc.publicSubnets) {
+                const subnetPeer = ec2.Peer.ipv4(subnet.ipv4CidrBlock);
+                asg.connections.allowFrom(subnetPeer, ec2.Port.tcp(22));
             }
         } else if (props.openToInternet) {
             asg.connections.allowFromAnyIpv4(ec2.Port.tcp(22));
