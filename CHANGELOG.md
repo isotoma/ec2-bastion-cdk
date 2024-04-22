@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.0.3](https://github.com/isotoma/ec2-bastion-cdk/compare/1.0.2...1.0.3)
+
+- Fix NLB health checks [`#6`](https://github.com/isotoma/ec2-bastion-cdk/pull/6)
+
 #### [1.0.2](https://github.com/isotoma/ec2-bastion-cdk/compare/1.0.1...1.0.2)
+
+> 7 March 2024
 
 - Fix shell usage for proxy user during setup [`#4`](https://github.com/isotoma/ec2-bastion-cdk/pull/4)
 
