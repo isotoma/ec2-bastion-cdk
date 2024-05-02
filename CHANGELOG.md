@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.1.0](https://github.com/isotoma/ec2-bastion-cdk/compare/1.0.3...1.1.0)
+
+- Allow setting server host keys [`#8`](https://github.com/isotoma/ec2-bastion-cdk/pull/8)
+
 #### [1.0.3](https://github.com/isotoma/ec2-bastion-cdk/compare/1.0.2...1.0.3)
+
+> 22 April 2024
 
 - Fix NLB health checks [`#6`](https://github.com/isotoma/ec2-bastion-cdk/pull/6)
 
