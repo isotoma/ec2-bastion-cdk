@@ -3,12 +3,15 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 interface GetScriptProps {
     publicKeys: Array<string>;
     proxyUserName: string;
     allowShell: boolean;
     allowEc2MetadataServiceAccess: boolean;
+    serverKeyEd25519Secret?: secretsmanager.ISecret;
+    serverKeyEcdsaSecret?: secretsmanager.ISecret;
 }
 
 const escapeShellString = (str: string): string => {
@@ -38,6 +41,30 @@ error() {
 publickeys_base64_encoded="${publickeysBase64Encoded}"
 
 main() {
+    sshRestartRequired=0
+    serverKeyEd25519SecretArn="$SERVER_KEY_ED25519_SECRET_ARN"
+    if [[ -n $serverKeyEd25519SecretArn ]]; then
+        serverKeyEd25519=$(aws secretsmanager get-secret-value --secret-id "$serverKeyEd25519SecretArn" --query SecretString --output text)
+        echo "Adding Ed25519 server key..."
+        echo "$serverKeyEd25519" | sudo tee /etc/ssh/ssh_host_ed25519_key > /dev/null
+        echo "Added Ed25519 server key"
+        sshRestartRequired=1
+    fi
+
+    serverKeyEcdsaSecretArn="$SERVER_KEY_ECDSA_SECRET_ARN"
+    if [[ -n $serverKeyEcdsaSecretArn ]]; then
+        serverKeyEcdsa=$(aws secretsmanager get-secret-value --secret-id "$serverKeyEcdsaSecretArn" --query SecretString --output text)
+        echo "Adding ECDSA server key..."
+        echo "$serverKeyEcdsa" | sudo tee /etc/ssh/ssh_host_ecdsa_key > /dev/null
+        echo "Added ECDSA server key"
+        sshRestartRequired=1
+    fi
+
+    if [[ $sshRestartRequired -eq 1 ]]; then
+        # Restart sshd to pick up the new keys
+        sudo systemctl restart sshd
+    fi
+
     if [[ -n $allow_ec2_metadata_service_access ]]; then
         echo "Disabling access to EC2 metadata service..."
         sudo yum install iptables-services -y
@@ -177,9 +204,40 @@ export interface Ec2HaBastionProps {
      * at 192.168.192.168, allowing access to any IAM permissions granted
      * to the instance profile.
      *
+     * Note that when serverKeys are set, this protection is set after the server keys
+     * are retrieved, but before the proxyUserName user is created and
+     * the provided publicKeys are added for that user.
+     *
+     * Beware that if this is set to true, and serverKeys are set,
+     * proxy users would be able to retrieve the server keys from
+     * secretsmanager.
+     *
      * @default false
      */
     allowEc2MetadataServiceAccess?: boolean;
+
+    /**
+     * Options for setting host keys from SecretsManager secrets.
+     *
+     * Note that the key should be the whole body of the secret, and
+     * in OpenSSH format, ie would be expected to start with
+     * -----BEGIN OPENSSH PRIVATE KEY----- and end with
+     * -----END OPENSSH PRIVATE KEY-----.
+     */
+    serverKeys?: {
+        /**
+         * Ed25519 private key that is stored at /etc/ssh/ssh_host_ed25519_key
+         *
+         * Key must be the whole body of the secret.
+         */
+        ed25519Secret?: secretsmanager.ISecret;
+        /**
+         * ECDSA private key that is stored at /etc/ssh/ssh_host_ecdsa_key
+         *
+         * Key must be the whole body of the secret.
+         */
+        ecdsaSecret?: secretsmanager.ISecret;
+    };
 }
 
 export class Ec2HaBastion extends Construct implements ec2.IConnectable {
@@ -198,6 +256,13 @@ export class Ec2HaBastion extends Construct implements ec2.IConnectable {
                 allowEc2MetadataServiceAccess: props.allowEc2MetadataServiceAccess ?? false,
             });
             const scriptBase64Encoded = Buffer.from(script).toString('base64');
+            if (props.serverKeys?.ed25519Secret) {
+                userData.addCommands(`export SERVER_KEY_ED25519_SECRET_ARN=${props.serverKeys.ed25519Secret.secretArn}`);
+            }
+            if (props.serverKeys?.ecdsaSecret) {
+                userData.addCommands(`export SERVER_KEY_ECDSA_SECRET_ARN=${props.serverKeys.ecdsaSecret.secretArn}`);
+            }
+
             userData.addCommands(`echo "${scriptBase64Encoded}" | base64 -d | bash`);
         } else {
             userData.addCommands('echo "No public keys to add"');
@@ -216,6 +281,12 @@ export class Ec2HaBastion extends Construct implements ec2.IConnectable {
         });
 
         asg.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+
+        for (const serverKeySecret of Object.values(props.serverKeys ?? {})) {
+            if (serverKeySecret) {
+                serverKeySecret.grantRead(asg.role);
+            }
+        }
 
         this.connections = asg.connections;
 
