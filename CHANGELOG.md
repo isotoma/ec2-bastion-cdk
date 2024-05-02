@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.1.1](https://github.com/isotoma/ec2-bastion-cdk/compare/1.1.0...1.1.1)
+
+- Also set server host public key [`#9`](https://github.com/isotoma/ec2-bastion-cdk/pull/9)
+
 #### [1.1.0](https://github.com/isotoma/ec2-bastion-cdk/compare/1.0.3...1.1.0)
+
+> 2 May 2024
 
 - Allow setting server host keys [`#8`](https://github.com/isotoma/ec2-bastion-cdk/pull/8)
 
