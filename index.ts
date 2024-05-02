@@ -47,6 +47,7 @@ main() {
         serverKeyEd25519=$(aws secretsmanager get-secret-value --secret-id "$serverKeyEd25519SecretArn" --query SecretString --output text)
         echo "Adding Ed25519 server key..."
         echo "$serverKeyEd25519" | sudo tee /etc/ssh/ssh_host_ed25519_key > /dev/null
+        sudo ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -y | sudo tee /etc/ssh/ssh_host_ed25519_key.pub > /dev/null
         echo "Added Ed25519 server key"
         sshRestartRequired=1
     fi
@@ -56,6 +57,7 @@ main() {
         serverKeyEcdsa=$(aws secretsmanager get-secret-value --secret-id "$serverKeyEcdsaSecretArn" --query SecretString --output text)
         echo "Adding ECDSA server key..."
         echo "$serverKeyEcdsa" | sudo tee /etc/ssh/ssh_host_ecdsa_key > /dev/null
+        sudo ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -y | sudo tee /etc/ssh/ssh_host_ecdsa_key.pub > /dev/null
         echo "Added ECDSA server key"
         sshRestartRequired=1
     fi
