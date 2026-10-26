@@ -29,6 +29,7 @@ new route53.ARecord(this, 'BastionRecord', {
     zone: myZone,
     target: route53.RecordTarget,fromAlias(new route53Targets.LoadBalancerTarget(bastion.networkLoadBalancer)),
 });
+```
 
 ## Releasing a new version
 
