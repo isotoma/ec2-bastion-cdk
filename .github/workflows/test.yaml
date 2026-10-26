@@ -5,13 +5,12 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ubuntu:focal
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v1
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
       with:
-        node-version: '16.x'
+        node-version: '24'
     - run: npm ci
     - run: npm run lint-check
     # - run: npm run compile
